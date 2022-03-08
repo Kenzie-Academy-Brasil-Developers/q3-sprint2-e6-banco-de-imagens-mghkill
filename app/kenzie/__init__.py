@@ -2,7 +2,7 @@ import os
 FILES_DIRECTORY = os.getenv("FILES_DIRECTORY")
 ALLOWED_EXTENSIONS = os.getenv("ALLOWED_EXTENSIONS")
 DATABASE_DIRECTORY = os.getenv("DATABASE_DIRECTORY")
-
+FILE_MAX_LENGTH = os.getenv("FILE_MAX_LENGTH")
 
 def create_directore_database():
     path_files_upload = os.path.abspath(f"{DATABASE_DIRECTORY}/{FILES_DIRECTORY}")

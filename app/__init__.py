@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, safe_join
-from app.kenzie import ALLOWED_EXTENSIONS, DATABASE_DIRECTORY, FILES_DIRECTORY, create_directore_database
+from app.kenzie import DATABASE_DIRECTORY, FILES_DIRECTORY, FILE_MAX_LENGTH, create_directore_database
 from http import HTTPStatus
 import os
 import time
@@ -17,19 +17,23 @@ def upload_image():
     path_files_upload = os.path.abspath(f"./{DATABASE_DIRECTORY}/{FILES_DIRECTORY}/{extension}")
     
     file_walk = os.walk(path_files_upload)
+
+    dict_header = int(dict(request.headers)["Content-Length"])
+
+    if not os.path.isdir(path_files_upload):
+        return {"error": "unsupported extension", "type file": "jpg, gif, png"}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE
+
+    if dict_header > int(FILE_MAX_LENGTH):
+        return {"error": "max 1.0MB"}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+
     try:
         for *_, file_name in file_walk:
             if file_name[0] == file.filename:
-                return {"error": "this image already exists"}, 409
-    except IndexError:
-
-        if not os.path.isdir(path_files_upload):
-
-            return {"error": "unsupported media type", "type file": "jpg, gif, png"},HTTPStatus.UNSUPPORTED_MEDIA_TYPE  
-
+                return {"error": "this image already exists"}, HTTPStatus.CONFLICT
+    except IndexError:  
         file.save(f"{path_files_upload}/{file.filename}") 
-        return {"message": "image created"}, HTTPStatus.CREATED
 
+    return {"message": "image created"}, HTTPStatus.CREATED
 
 @app.get('/')
 def teste():
