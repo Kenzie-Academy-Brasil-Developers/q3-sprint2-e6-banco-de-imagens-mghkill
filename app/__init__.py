@@ -15,10 +15,9 @@ def upload_image():
     file = request.files["file"]
     extension = file.filename.split(".")[-1]
     path_files_upload = os.path.abspath(f"./{DATABASE_DIRECTORY}/{FILES_DIRECTORY}/{extension}")
-    
     file_walk = os.walk(path_files_upload)
-
     dict_header = int(dict(request.headers)["Content-Length"])
+
 
     if not os.path.isdir(path_files_upload):
         return {"error": "unsupported extension", "type file": "jpg, gif, png"}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE
@@ -35,6 +34,39 @@ def upload_image():
 
     return {"message": "image created"}, HTTPStatus.CREATED
 
-@app.get('/')
-def teste():
-    return ""
+@app.get('/files')
+def list_items():
+
+    generator_walk = os.walk("./database/upload")
+    output_list_dir = []
+    output_list_file = []
+    for directory, _, file in list(generator_walk):
+        dir_append = directory.split("/")[-1]
+        output_list_dir.append(dir_append)
+        output_list_file.append(file)
+        
+    output = dict(zip(output_list_dir[1:], output_list_file[1:]))
+    print(output.keys())
+
+    
+    return output, HTTPStatus.OK
+
+@app.get('/files/<dirname>')
+def list_items_query(dirname):
+
+    generator_walk = os.walk("./database/upload")
+    output_list_dir = []
+    output_list_file = []
+    for directory, _, file in list(generator_walk):
+        dir_append = directory.split("/")[-1]
+        output_list_dir.append(dir_append)
+        output_list_file.append(file)
+        
+    output = dict(zip(output_list_dir[1:], output_list_file[1:]))
+
+    if dirname in output.keys():
+        return {dirname: output[dirname]}, HTTPStatus.OK
+    
+    return {"error": "fasdf"}, 201
+
+    
