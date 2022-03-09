@@ -6,8 +6,8 @@ import os
 from app.kenzie import ENV_GENERATOR
 
 
-def generator_walk(direc, file):
-    
+def generator_walk(direc: dict, file: dict):
+     
     generator = os.walk(ENV_GENERATOR)
 
     for directory, _, file in list(generator):

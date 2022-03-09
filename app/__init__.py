@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify, safe_join, send_file
 from app.kenzie import DATABASE_DIRECTORY, ENV_GENERATOR, FILES_DIRECTORY, FILE_MAX_LENGTH, create_directore_database
 from http import HTTPStatus
 import os
-import time
 
 from app.kenzie.image import generator_walk
 
@@ -78,14 +77,16 @@ def search_item(dirname):
 
 @app.get('/download/<filename>')
 def download_item(filename):
+    output_list_dir = []
+    output_list_file = []
+
     extension = filename.split(".")[-1]
 
     path_files_upload = os.path.abspath(f"./{DATABASE_DIRECTORY}/{FILES_DIRECTORY}/{extension}")
 
     filepath = safe_join(path_files_upload, filename)
     # 
-    output_list_dir = []
-    output_list_file = [] 
+    
 
     # generator_walk(output_list_dir, output_list_file)
     generator = os.walk(ENV_GENERATOR)
