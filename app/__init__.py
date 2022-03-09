@@ -1,8 +1,10 @@
-from flask import Flask, request, jsonify, safe_join
-from app.kenzie import DATABASE_DIRECTORY, FILES_DIRECTORY, FILE_MAX_LENGTH, create_directore_database
+from flask import Flask, request, jsonify, safe_join, send_file
+from app.kenzie import DATABASE_DIRECTORY, ENV_GENERATOR, FILES_DIRECTORY, FILE_MAX_LENGTH, create_directore_database
 from http import HTTPStatus
 import os
 import time
+
+from app.kenzie.image import generator_walk
 
 app = Flask(__name__)
 
@@ -30,43 +32,72 @@ def upload_image():
             if file_name[0] == file.filename:
                 return {"error": "this image already exists"}, HTTPStatus.CONFLICT
     except IndexError:  
-        file.save(f"{path_files_upload}/{file.filename}") 
+        ...    
+    file.save(f"{path_files_upload}/{file.filename}") 
 
     return {"message": "image created"}, HTTPStatus.CREATED
 
 @app.get('/files')
 def list_items():
 
-    generator_walk = os.walk("./database/upload")
+    generator_walk = os.walk(ENV_GENERATOR)
     output_list_dir = []
     output_list_file = []
+    
     for directory, _, file in list(generator_walk):
         dir_append = directory.split("/")[-1]
         output_list_dir.append(dir_append)
         output_list_file.append(file)
         
     output = dict(zip(output_list_dir[1:], output_list_file[1:]))
-    print(output.keys())
+    
 
     
     return output, HTTPStatus.OK
 
 @app.get('/files/<dirname>')
-def list_items_query(dirname):
-
-    generator_walk = os.walk("./database/upload")
+def search_item(dirname):
     output_list_dir = []
-    output_list_file = []
+    output_list_file = []   
+    generator_walk = os.walk(ENV_GENERATOR)
+    
     for directory, _, file in list(generator_walk):
         dir_append = directory.split("/")[-1]
         output_list_dir.append(dir_append)
         output_list_file.append(file)
-        
-    output = dict(zip(output_list_dir[1:], output_list_file[1:]))
 
+    
+    
+    output = dict(zip(output_list_dir[1:], output_list_file[1:]))
+    
     if dirname in output.keys():
         return {dirname: output[dirname]}, HTTPStatus.OK
     
-    return {"error": "fasdf"}, 201
+    return {"error": "extension not found"}, HTTPStatus.NOT_FOUND
 
+
+@app.get('/download/<filename>')
+def download_item(filename):
+    extension = filename.split(".")[-1]
+
+    path_files_upload = os.path.abspath(f"./{DATABASE_DIRECTORY}/{FILES_DIRECTORY}/{extension}")
+
+    filepath = safe_join(path_files_upload, filename)
+    # 
+    output_list_dir = []
+    output_list_file = [] 
+
+    # generator_walk(output_list_dir, output_list_file)
+    generator = os.walk(ENV_GENERATOR)
+
+    for directory, _, file in list(generator):
+        dir_append = directory.split("/")[-1]
+        output_list_dir.append(dir_append)
+        output_list_file.append(file)
+
+    for item in output_list_file:
+        if filename in item:
+            return send_file(filepath, as_attachment=True), HTTPStatus.OK
+    
+    return {"error": "not found"}, HTTPStatus.NOT_FOUND
     
