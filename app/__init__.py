@@ -3,7 +3,7 @@ from app.kenzie import DATABASE_DIRECTORY, ENV_GENERATOR, FILES_DIRECTORY, FILE_
 from http import HTTPStatus
 import os
 
-from app.kenzie.image import generator_walk
+from app.kenzie.image import walk_generator
 
 app = Flask(__name__)
 
@@ -21,7 +21,7 @@ def upload_image():
 
 
     if not os.path.isdir(path_files_upload):
-        return {"error": "unsupported extension", "type file": "jpg, gif, png"}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE
+        return {"error": "unsupported media type"}, HTTPStatus.UNSUPPORTED_MEDIA_TYPE
 
     if dict_header > int(FILE_MAX_LENGTH):
         return {"error": "max 1.0MB"}, HTTPStatus.REQUEST_ENTITY_TOO_LARGE
@@ -36,38 +36,25 @@ def upload_image():
 
     return {"message": "image created"}, HTTPStatus.CREATED
 
+
+
 @app.get('/files')
 def list_items():
 
-    generator_walk = os.walk(ENV_GENERATOR)
-    output_list_dir = []
-    output_list_file = []
-    
-    for directory, _, file in list(generator_walk):
-        dir_append = directory.split("/")[-1]
-        output_list_dir.append(dir_append)
-        output_list_file.append(file)
+    tuple_directory = walk_generator()   
         
-    output = dict(zip(output_list_dir[1:], output_list_file[1:]))
-    
-
+    output = dict(zip(tuple_directory[0][1:], tuple_directory[1][1:]))
     
     return output, HTTPStatus.OK
 
+
+
 @app.get('/files/<dirname>')
 def search_item(dirname):
-    output_list_dir = []
-    output_list_file = []   
-    generator_walk = os.walk(ENV_GENERATOR)
-    
-    for directory, _, file in list(generator_walk):
-        dir_append = directory.split("/")[-1]
-        output_list_dir.append(dir_append)
-        output_list_file.append(file)
 
+    tuple_directory = walk_generator()
     
-    
-    output = dict(zip(output_list_dir[1:], output_list_file[1:]))
+    output = dict(zip(tuple_directory[0][1:], tuple_directory[1][1:]))
     
     if dirname in output.keys():
         return {dirname: output[dirname]}, HTTPStatus.OK
@@ -75,28 +62,20 @@ def search_item(dirname):
     return {"error": "extension not found"}, HTTPStatus.NOT_FOUND
 
 
+
 @app.get('/download/<filename>')
 def download_item(filename):
-    output_list_dir = []
-    output_list_file = []
+    
 
     extension = filename.split(".")[-1]
 
     path_files_upload = os.path.abspath(f"./{DATABASE_DIRECTORY}/{FILES_DIRECTORY}/{extension}")
 
     filepath = safe_join(path_files_upload, filename)
-    # 
-    
 
-    # generator_walk(output_list_dir, output_list_file)
-    generator = os.walk(ENV_GENERATOR)
+    tuple_directory = walk_generator()
 
-    for directory, _, file in list(generator):
-        dir_append = directory.split("/")[-1]
-        output_list_dir.append(dir_append)
-        output_list_file.append(file)
-
-    for item in output_list_file:
+    for item in tuple_directory[1]:
         if filename in item:
             return send_file(filepath, as_attachment=True), HTTPStatus.OK
     

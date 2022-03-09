@@ -6,11 +6,17 @@ import os
 from app.kenzie import ENV_GENERATOR
 
 
-def generator_walk(direc: dict, file: dict):
-     
+def walk_generator():
+    list_dir = []
+    list_file = []
+
     generator = os.walk(ENV_GENERATOR)
 
     for directory, _, file in list(generator):
         dir_append = directory.split("/")[-1]
-        direc.append(dir_append)
-        file.append(file)
+
+        list_dir.append(dir_append)
+        list_file.append(file)
+    output = (list_dir, list_file)
+
+    return output
